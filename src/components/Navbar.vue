@@ -11,6 +11,15 @@
           <span v-if="store.cartCount > 0" class="cart-badge">{{ store.cartCount }}</span>
         </router-link>
         <router-link to="/account" class="nav-item">บัญชีของฉัน</router-link>
+
+        <!-- 👑 แสดงเฉพาะ role === 'admin' เท่านั้น -->
+        <router-link 
+          v-if="store.isAuthenticated && (store.currentUser?.role === 'admin' || store.role === 'admin')" 
+          to="/admin" 
+          class="nav-item admin-nav-item"
+        >
+          ⚙️ Admin Management
+        </router-link>
       </nav>
     </div>
   </header>
@@ -63,6 +72,22 @@ const store = useAppStore()
   color: #2563eb;
   font-weight: 600;
 }
+
+/* 👑 สไตล์พิเศษสำหรับปุ่ม Admin Management */
+.admin-nav-item {
+  color: #ef4444;
+  font-weight: 600;
+  padding: 4px 10px;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background-color: #fef2f2;
+}
+.admin-nav-item:hover, .admin-nav-item.router-link-active {
+  color: #dc2626;
+  background-color: #fee2e2;
+  border-color: #f87171;
+}
+
 .cart-badge-wrapper {
   position: relative;
   display: inline-flex;
