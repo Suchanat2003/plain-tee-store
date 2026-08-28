@@ -120,45 +120,45 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-// 🛠️ แก้ไขฟังก์ชัน updateProduct ใน appStore.js
-async function updateProduct(idOrProduct, payload) {
-  try {
-    let productId = idOrProduct
-    let bodyData = payload
+  // 🛠️ แก้ไขฟังก์ชัน updateProduct ใน appStore.js
+  async function updateProduct(idOrProduct, payload) {
+    try {
+      let productId = idOrProduct
+      let bodyData = payload
 
-    if (typeof idOrProduct === 'object' && idOrProduct !== null) {
-      productId = idOrProduct.id || idOrProduct._id
-      bodyData = payload || idOrProduct
-    }
-
-    if (!productId) {
-      throw new Error('ไม่พบ Product ID สำหรับแก้ไขสินค้า')
-    }
-
-    // 1. ยิง API แก้ไขไปยัง Backend
-    const updatedRes = await apiRequest(`/products/${productId}`, { 
-      method: 'PUT', 
-      body: JSON.stringify(bodyData) 
-    })
-
-    // 2. อัปเดตข้อมูลใน State เฉพาะชิ้นที่ถูกแก้ไขโดยตรง (ไม่ต้องดึงใหม่ทั้งหมด)
-    const index = products.value.findIndex(p => (p.id || p._id) === productId)
-    if (index !== -1) {
-      const updatedItem = updatedRes?.product || updatedRes || bodyData
-      products.value[index] = {
-        ...products.value[index],
-        ...updatedItem,
-        id: productId,
-        _id: productId
+      if (typeof idOrProduct === 'object' && idOrProduct !== null) {
+        productId = idOrProduct.id || idOrProduct._id
+        bodyData = payload || idOrProduct
       }
-    }
 
-    showNotification('อัปเดตสินค้าเรียบร้อยแล้ว') 
-  } catch (error) { 
-    showNotification(getErrorMessage(error, 'อัปเดตสินค้าไม่สำเร็จ'), 'error')
-    throw error 
+      if (!productId) {
+        throw new Error('ไม่พบ Product ID สำหรับแก้ไขสินค้า')
+      }
+
+      // 1. ยิง API แก้ไขไปยัง Backend
+      const updatedRes = await apiRequest(`/products/${productId}`, { 
+        method: 'PUT', 
+        body: JSON.stringify(bodyData) 
+      })
+
+      // 2. อัปเดตข้อมูลใน State เฉพาะชิ้นที่ถูกแก้ไขโดยตรง (ไม่ต้องดึงใหม่ทั้งหมด)
+      const index = products.value.findIndex(p => (p.id || p._id) === productId)
+      if (index !== -1) {
+        const updatedItem = updatedRes?.product || updatedRes || bodyData
+        products.value[index] = {
+          ...products.value[index],
+          ...updatedItem,
+          id: productId,
+          _id: productId
+        }
+      }
+
+      showNotification('อัปเดตสินค้าเรียบร้อยแล้ว') 
+    } catch (error) { 
+      showNotification(getErrorMessage(error, 'อัปเดตสินค้าไม่สำเร็จ'), 'error')
+      throw error 
+    }
   }
-}
 
   async function deleteProduct(id) {
     try { 
@@ -327,7 +327,7 @@ async function updateProduct(idOrProduct, payload) {
       const response = await apiRequest('/orders/', { method: 'POST' })
       showNotification('สั่งซื้อสินค้าเรียบร้อยแล้ว')
       await loadCart()
-      await fetchOrders()
+      await fetchOrders({ page: 1, limit: 5, admin: false })
       return response?.order 
     } catch (error) { 
       orders.value = [localOrder, ...orders.value]
@@ -340,7 +340,8 @@ async function updateProduct(idOrProduct, payload) {
 
   // 📥 📌 2. ดึงรายการสั่งซื้อ แบบต่อ Query String (?page=...&limit=...)
   async function fetchOrders({ page = 1, limit = 5, admin = false } = {}) {
-    const basePath = (admin || isAdmin.value) ? '/admin/orders' : '/orders'
+    // 💡 ปรับจุดนี้: สลับไปใช้ /admin/orders เฉพาะกรณีที่ส่ง admin = true มาเท่านั้น
+    const basePath = admin ? '/admin/orders' : '/orders'
     const endpoint = `${basePath}?page=${page}&limit=${limit}`
 
     try { 
